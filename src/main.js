@@ -6,58 +6,71 @@ const { fetchCandlesticks } = require('./api/fetch-candlesticks');
 const { fetchLotSize } = require('./api/fetch-lot-size');
 const { fetchBalances } = require('./api/fetch-balances');
 const { openPosition, closePosition } = require('./api/send-orders');
+
 const { WSS_URL } = require('../constants');
 
-const initBot = async () => {
-  const ws = new WebSocket(`${WSS_URL}/ws/btcusdt@kline_1m`, {
-    method: 'SUBSCRIBE',
-    id: 2,
-  });
-
-  ws.on('open', () => {
-    console.log('Connected');
-  });
-
+const startBot = async () => {
   const filters = await fetchLotSize();
   const [prevCandle] = await fetchCandlesticks(false, 1);
 
-  ws.on('message', async (dataJSON) => {
-    const data = JSON.parse(dataJSON);
+  let inPosition = false;
 
-    if (data.e === 'kline') {
-      const { k: candleData } = data;
-      const { t: openTime } = candleData;
-      const openDate = new Date(openTime);
+  const initWs = () => {
+    const ws = new WebSocket(`${WSS_URL}/ws/btcusdt@kline_30m`, {
+      method: 'SUBSCRIBE',
+      id: 2,
+    });
 
-      if (prevCandle.openTime === openTime) {
-        return;
+    ws.on('open', () => {
+      console.log('Connected');
+    });
+
+    ws.on('message', async (dataJSON) => {
+      const data = JSON.parse(dataJSON);
+
+      if (data.e === 'kline') {
+        const { k: candleData } = data;
+        const { t: openTime } = candleData;
+        const openDate = new Date(openTime);
+
+        if (prevCandle.openTime === openTime) {
+          return;
+        }
+
+        prevCandle.openTime = openTime;
+
+        const { availableBalance, positionAmt } = await fetchBalances();
+
+        if (openDate.getUTCHours() === 10 && openDate.getUTCMinutes() === 0) {
+          // LONG
+          await openPosition(positionAmt > 0, availableBalance, candleData.o, filters, 'BUY');
+          inPosition = true;
+        } else if (openDate.getUTCHours() === 17 && openDate.getUTCMinutes() === 30) {
+          // CLOSE LONG
+          await closePosition(positionAmt);
+          inPosition = false;
+        } else if (openDate.getUTCHours() === 0 && openDate.getUTCMinutes() === 30) {
+          // SHORT
+          await openPosition(positionAmt > 0, availableBalance, candleData.o, filters, 'SELL');
+          inPosition = true;
+        } else if (openDate.getUTCHours() === 5 && openDate.getUTCMinutes() === 0) {
+          // CLOSE SHORT
+          await closePosition(positionAmt);
+          inPosition = false;
+        }
+
+        if (!inPosition) {
+          await closePosition(positionAmt);
+        }
       }
+    });
 
-      prevCandle.openTime = openTime;
+    ws.on('close', () => {
+      initWs();
+    });
+  };
 
-      const { availableBalance, positionAmt } = await fetchBalances();
-
-      if (openDate.getHours() === 11 && openDate.getMinutes() === 0) {
-        // LONG
-        await openPosition(positionAmt > 0, availableBalance, candleData.o, filters, 'BUY');
-      } else if (openDate.getHours() === 18 && openDate.getMinutes() === 30) {
-        // CLOSE LONG
-        await closePosition(positionAmt);
-      }
-
-      if (openDate.getHours() === 1 && openDate.getMinutes() === 30) {
-        // SHORT
-        await openPosition(positionAmt > 0, availableBalance, candleData.o, filters, 'SELL');
-      } else if (openDate.getHours() === 6 && openDate.getMinutes() === 0) {
-        // CLOSE SHORT
-        await closePosition(positionAmt);
-      }
-    }
-  });
-
-  ws.on('close', () => {
-    initBot();
-  });
+  initWs();
 };
 
-initBot();
+startBot();

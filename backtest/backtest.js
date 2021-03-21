@@ -9,26 +9,26 @@ const runBacktest = async () => {
   candleData.forEach(({ openTime, openPrice }) => {
     const openDate = new Date(openTime);
 
-    if (openDate.getHours() === 11 && openDate.getMinutes() === 0) {
+    if (openDate.getUTCHours() === 10 && openDate.getUTCMinutes() === 0) {
       // BUY
       entry = openPrice;
-      console.log('LONG', openDate, entry);
-    } else if (openDate.getHours() === 18 && openDate.getMinutes() === 30 && entry) {
+      // console.log('LONG', openDate, entry);
+    } else if (openDate.getUTCHours() === 17 && openDate.getUTCMinutes() === 30 && entry) {
       // SELL
       const pnl = openPrice / entry;
       capital *= pnl;
       entry = openPrice;
-      console.log('CLOSE LONG', openDate, entry, capital, pnl);
+      // console.log('CLOSE LONG', openDate, entry, capital, pnl);
     }
 
-    if (openDate.getHours() === 1 && openDate.getMinutes() === 30) {
+    if (openDate.getUTCHours() === 0 && openDate.getUTCMinutes() === 30) {
       entry = openPrice;
-      console.log('SHORT', openDate, entry);
-    } else if (openDate.getHours() === 6 && openDate.getMinutes() === 0 && entry) {
+      // console.log('SHORT', openDate, entry);
+    } else if (openDate.getUTCHours() === 5 && openDate.getUTCMinutes() === 0 && entry) {
       const pnl = 1 - (openPrice / entry) + 1;
       capital *= pnl;
       entry = openPrice;
-      console.log('CLOSE SHORT', openDate, entry, capital, pnl);
+      // console.log('CLOSE SHORT', openDate, entry, capital, pnl);
     }
   });
 
