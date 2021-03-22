@@ -47,7 +47,6 @@ const startBot = async () => {
           inPosition = true;
         } else if (openDate.getUTCHours() === 17 && openDate.getUTCMinutes() === 30) {
           // CLOSE LONG
-          await closePosition(positionAmt);
           inPosition = false;
         } else if (openDate.getUTCHours() === 0 && openDate.getUTCMinutes() === 30) {
           // SHORT
@@ -55,11 +54,11 @@ const startBot = async () => {
           inPosition = true;
         } else if (openDate.getUTCHours() === 5 && openDate.getUTCMinutes() === 0) {
           // CLOSE SHORT
-          await closePosition(positionAmt);
           inPosition = false;
         }
 
         if (!inPosition) {
+          // CLOSE POSITION
           await closePosition(positionAmt);
         }
       }

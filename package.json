@@ -1,6 +1,6 @@
 {
   "name": "sessions-bot",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Session trading bot",
   "main": "index.js",
   "scripts": {
