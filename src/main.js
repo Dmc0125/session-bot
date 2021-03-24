@@ -45,7 +45,7 @@ const startBot = async () => {
           // LONG
           await openPosition(positionAmt > 0, availableBalance, candleData.o, filters, 'BUY');
           inPosition = true;
-        } else if (openDate.getUTCHours() === 17 && openDate.getUTCMinutes() === 30) {
+        } else if (openDate.getUTCHours() === 16 && openDate.getUTCMinutes() === 30) {
           // CLOSE LONG
           inPosition = false;
         } else if (openDate.getUTCHours() === 0 && openDate.getUTCMinutes() === 30) {

@@ -13,7 +13,7 @@ const runBacktest = async () => {
       // BUY
       entry = openPrice;
       // console.log('LONG', openDate, entry);
-    } else if (openDate.getUTCHours() === 17 && openDate.getUTCMinutes() === 30 && entry) {
+    } else if (openDate.getUTCHours() === 16 && openDate.getUTCMinutes() === 30 && entry) {
       // SELL
       const pnl = openPrice / entry;
       capital *= pnl;
